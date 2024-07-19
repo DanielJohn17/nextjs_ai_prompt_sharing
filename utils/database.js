@@ -21,6 +21,7 @@ export async function connectToDB() {
 
   if (!cached.promise) {
     const opts = {
+      dbName: "share_prompt",
       bufferCommands: false,
     };
 
