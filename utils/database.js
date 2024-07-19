@@ -1,25 +1,33 @@
 import mongoose from "mongoose";
 
-let isConnected = false; // tracking connection status
+const MONGODB_URI = process.env.MONGODB_URI;
 
-export const connectToDB = async () => {
-  mongoose.set("strictQuery", true);
+if (!MONGODB_URI) {
+  throw new Error(
+    "Please define the MONGODB_URI environment variable inside .env.local"
+  );
+}
 
-  if (isConnected) {
-    console.log("MongoDb is already connected");
-    return;
+let cached = global.mongoose;
+
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
+
+export async function connectToDB() {
+  if (cached.conn) {
+    return cached.conn;
   }
 
-  try {
-    await mongoose.connect(process.env.MONGODB_URI, {
-      dbName: "share_prompt",
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
+  if (!cached.promise) {
+    const opts = {
+      bufferCommands: false,
+    };
+
+    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
+      return mongoose;
     });
-
-    isConnected = true;
-    console.log("MongoDb connected");
-  } catch (error) {
-    console.log("MongoDb connection error", error);
   }
-};
+  cached.conn = await cached.promise;
+  return cached.conn;
+}

@@ -4,6 +4,7 @@ const promptSchema = new Schema({
   creator: {
     type: Schema.Types.ObjectId,
     ref: "User",
+    required: [true, "Creator is required."],
   },
   prompt: {
     type: String,

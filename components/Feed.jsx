@@ -5,10 +5,21 @@ import { useState, useEffect } from "react";
 import PromptCard from "./PromptCard";
 
 const PromptCardList = ({ data, handleTagClick }) => {
+  if (data.length === 0 || !data) {
+    return (
+      <div className="flex-center mt-16">
+        <h2 className="text-gray-500">No prompts found</h2>
+      </div>
+    );
+  }
   return (
     <div className="mt-16 prompt_layout">
       {data.map((post) => (
-        <PromptCard key={post.id} post={post} handleTagClick={handleTagClick} />
+        <PromptCard
+          key={post._id}
+          post={post}
+          handleTagClick={handleTagClick}
+        />
       ))}
     </div>
   );
@@ -17,11 +28,12 @@ const PromptCardList = ({ data, handleTagClick }) => {
 const Feed = () => {
   const [allPosts, setAllPosts] = useState([]);
 
+  // Search states
   const [searchText, setSearchText] = useState("");
   const [searchTimeout, setSearchTimeout] = useState(null);
   const [searchedResults, setSearchedResults] = useState([]);
 
-  const fetchPost = async () => {
+  const fetchPosts = async () => {
     const response = await fetch("/api/prompt");
     const data = await response.json();
 
@@ -29,11 +41,11 @@ const Feed = () => {
   };
 
   useEffect(() => {
-    fetchPost();
+    fetchPosts();
   }, []);
 
   const filterPrompts = (searchtext) => {
-    const regex = new RegExp(searchtext, "i");
+    const regex = new RegExp(searchtext, "i"); // 'i' flag for case-insensitive search
     return allPosts.filter(
       (item) =>
         regex.test(item.creator.username) ||
@@ -46,10 +58,10 @@ const Feed = () => {
     clearTimeout(searchTimeout);
     setSearchText(e.target.value);
 
+    // debounce method
     setSearchTimeout(
       setTimeout(() => {
         const searchResult = filterPrompts(e.target.value);
-
         setSearchedResults(searchResult);
       }, 500)
     );
@@ -67,7 +79,7 @@ const Feed = () => {
       <form className="relative w-full flex-center">
         <input
           type="text"
-          placeholder="Search for a tag or username"
+          placeholder="Search for a tag or a username"
           value={searchText}
           onChange={handleSearchChange}
           required
@@ -75,7 +87,7 @@ const Feed = () => {
         />
       </form>
 
-      {/* Handle prompts on search text */}
+      {/* All Prompts */}
       {searchText ? (
         <PromptCardList
           data={searchedResults}
